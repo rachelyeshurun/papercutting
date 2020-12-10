@@ -1,0 +1,56 @@
+import errno
+import os
+import sys
+
+import numpy as np
+import cv2
+
+
+import utils
+
+
+import numpy as np
+import cv2
+
+
+# Based on: https://pythonprogramming.net/grabcut-foreground-extraction-python-opencv-tutorial/
+
+
+
+
+class foreground_extractor():
+    """ class to extract foreground of any image
+    Args:
+        indir (string): name of input file directory.
+        outdir (string): name of output file directory
+    """
+
+    def extract(self, image):
+
+        copy = np.copy(image)
+        if len(image.shape) < 3:
+            copy = cv2.cvtColor(copy, cv2.COLOR_GRAY2BGR)
+
+        mask = np.zeros(copy.shape[:2], np.uint8)
+
+        bgdModel = np.zeros((1, 65), np.float64)
+        fgdModel = np.zeros((1, 65), np.float64)
+
+
+
+        height, width, channels = copy.shape
+        print ('width, height of image:', width, height)
+        print ('width, height of image:', 0.1 * width, 0.1 *height, 0.9 * width, 0.9 * height)
+        # cut around 10% from edges
+        x = np.uint32(0.01 * width)
+        y = np.uint32(0.01 * height)
+        w = np.uint32(0.99 * width)
+        h = np.uint32(0.99 * height)
+        print ('dimensions to cut foreground from: (x,y,w,h)', x, y, w, h)
+        rect = (x,y,w,h)
+
+        cv2.grabCut(copy, mask, rect, bgdModel, fgdModel, 5, cv2.GC_INIT_WITH_RECT)
+        mask2 = np.where((mask == 2) | (mask == 0), 0, 1).astype('uint8')
+        copy = copy * mask2[:, :, np.newaxis]
+
+        return copy
